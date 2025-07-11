@@ -1,5 +1,15 @@
 body {
   margin: 20px;
+  font-family: 'Press Start 2P', cursive;
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+h1 {
+  text-align: center;
+  color: #4CAF50;
+  font-size: 24px;
+  margin-bottom: 20px;
 }
 
 code {
@@ -8,15 +18,24 @@ code {
 
 canvas {
   margin: auto;
+  border: 3px solid #4CAF50;
+  background-color: #2a2a2a;
+  display: block;
 }
 
 .container {
   display: flex;
   flex-direction: column;
+  align-items: center;
+}
+
+hr {
+  border: 1px solid #4CAF50;
+  width: 80%;
 }
 
 @media (min-width: 800px) {
   .container {
-    flex-direction: row;
+    flex-direction: column;
   }
 }
