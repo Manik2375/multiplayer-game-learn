@@ -87,6 +87,7 @@ const CANVAS_WIDTH = 640;
 const CANVAS_HEIGHT = 480;
 const PLAYER_SIZE = 30;
 const COLLECTIBLE_SIZE = 20;
+const MAX_MOVE_SPEED = 3; // Maximum allowed movement speed per frame
 
 // Generate random collectible
 function generateCollectible() {
@@ -137,19 +138,22 @@ io.on('connection', (socket) => {
       const player = players[socket.id];
       const { direction, speed } = data;
       
+      // Validate and clamp speed for security
+      const validSpeed = Math.min(speed, MAX_MOVE_SPEED);
+      
       // Update player position
       switch (direction) {
         case 'up':
-          player.y = Math.max(0, player.y - speed);
+          player.y = Math.max(0, player.y - validSpeed);
           break;
         case 'down':
-          player.y = Math.min(CANVAS_HEIGHT - PLAYER_SIZE, player.y + speed);
+          player.y = Math.min(CANVAS_HEIGHT - PLAYER_SIZE, player.y + validSpeed);
           break;
         case 'left':
-          player.x = Math.max(0, player.x - speed);
+          player.x = Math.max(0, player.x - validSpeed);
           break;
         case 'right':
-          player.x = Math.min(CANVAS_WIDTH - PLAYER_SIZE, player.x + speed);
+          player.x = Math.min(CANVAS_WIDTH - PLAYER_SIZE, player.x + validSpeed);
           break;
       }
       

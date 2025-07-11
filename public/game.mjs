@@ -11,7 +11,7 @@ let players = {};
 let collectibles = {};
 const PLAYER_SIZE = 30;
 const COLLECTIBLE_SIZE = 20;
-const MOVE_SPEED = 5;
+const MOVE_SPEED = 3; // Reduced for smoother movement
 
 // Colors
 const PLAYER_COLOR = '#4CAF50';
@@ -51,12 +51,14 @@ socket.on('connect', () => {
 socket.on('disconnect', () => {
   console.log('Disconnected from server');
   isConnected = false;
+  stopMovement(); // Stop movement when disconnected
   draw();
 });
 
 socket.on('connect_error', (error) => {
   console.error('Connection error:', error);
   isConnected = false;
+  stopMovement(); // Stop movement on connection error
   draw();
 });
 
@@ -111,19 +113,51 @@ socket.on('player-disconnect', (playerId) => {
 
 // Input handling
 const keys = {};
+let lastMoveTime = 0;
+const MOVE_INTERVAL = 30; // milliseconds between movements (33 FPS for smoother movement)
+let movementInterval = null;
 
 document.addEventListener('keydown', (e) => {
-  keys[e.key.toLowerCase()] = true;
-  handleMovement();
+  const key = e.key.toLowerCase();
+  if (!keys[key]) {
+    keys[key] = true;
+    startMovement();
+  }
   e.preventDefault(); // Prevent default scrolling behavior
 });
 
 document.addEventListener('keyup', (e) => {
   keys[e.key.toLowerCase()] = false;
+  
+  // Check if any movement keys are still pressed
+  const hasMovementKey = keys['w'] || keys['s'] || keys['a'] || keys['d'] || 
+                        keys['arrowup'] || keys['arrowdown'] || keys['arrowleft'] || keys['arrowright'];
+  
+  if (!hasMovementKey) {
+    stopMovement();
+  }
 });
 
+function startMovement() {
+  if (movementInterval) return; // Already moving
+  
+  movementInterval = setInterval(() => {
+    handleMovement();
+  }, MOVE_INTERVAL);
+}
+
+function stopMovement() {
+  if (movementInterval) {
+    clearInterval(movementInterval);
+    movementInterval = null;
+  }
+}
+
 function handleMovement() {
-  if (!currentPlayer) return;
+  if (!currentPlayer || !isConnected) return;
+  
+  const now = Date.now();
+  if (now - lastMoveTime < MOVE_INTERVAL) return;
   
   let direction = null;
   
@@ -138,7 +172,31 @@ function handleMovement() {
   }
   
   if (direction) {
+    // Client-side prediction for smoother movement
+    const oldX = currentPlayer.x;
+    const oldY = currentPlayer.y;
+    
+    // Update position locally first
+    currentPlayer.movePlayer(direction, MOVE_SPEED);
+    
+    // Keep player within bounds
+    currentPlayer.x = Math.max(0, Math.min(canvas.width - PLAYER_SIZE, currentPlayer.x));
+    currentPlayer.y = Math.max(0, Math.min(canvas.height - PLAYER_SIZE, currentPlayer.y));
+    
+    // Update the players object for rendering
+    if (players[currentPlayer.id]) {
+      players[currentPlayer.id].x = currentPlayer.x;
+      players[currentPlayer.id].y = currentPlayer.y;
+    }
+    
+    // Redraw immediately for smooth visual feedback
+    draw();
+    
+    // Send to server
     socket.emit('move-player', { direction, speed: MOVE_SPEED });
+    lastMoveTime = now;
+  } else {
+    stopMovement();
   }
 }
 
