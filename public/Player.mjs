@@ -24,8 +24,6 @@ class Player {
   }
 
   collision(item) {
-    // Simple AABB collision detection
-    // Assuming both player and item have width/height of 30 and 20 respectively
     const playerSize = 30;
     const itemSize = 20;
     
@@ -36,10 +34,8 @@ class Player {
   }
 
   calculateRank(arr) {
-    // Sort players by score in descending order
     const sortedPlayers = arr.sort((a, b) => b.score - a.score);
     
-    // Find this player's rank
     const rank = sortedPlayers.findIndex(player => player.id === this.id) + 1;
     const totalPlayers = arr.length;
     
